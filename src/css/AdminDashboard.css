@@ -1,0 +1,58 @@
+/* AdminDashboard.css */
+h1, h2, h3 {
+    color: #333;
+    text-align: center;
+  }
+  
+  table {
+    width: 80%;
+    margin: 0 auto;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  tr:hover {
+    background-color: #e6e6e6;
+  }
+
+  /* Center the "Search for Other Groups" section */
+.search-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Style the search input field */
+  .search-input {
+    width: 200px; 
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Style the filtered groups list */
+  .filtered-groups {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .filtered-groups li {
+    margin-bottom: 0.5rem;
+  }
