@@ -1,8 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../css/Navbar.css';
 
-const Navbar = ({ isAuthenticated }) => {
+const Navbar = ({ isAuthenticated, onLogout }) => {
+  const navigate = useNavigate();
+  const handleLogoutClick = () => {
+    onLogout(); // Call the onLogout function passed from App
+    navigate('/'); // Navigate to the home page
+  };
+
+  
   return (
     <nav>
       <ul>
@@ -10,9 +17,14 @@ const Navbar = ({ isAuthenticated }) => {
           <Link to="/">Home</Link>
         </li>
         {!isAuthenticated && (
-          <li>
-            <Link to="/register">Register</Link>
-          </li>
+          <>
+            <li>
+              <Link to="/register">Register</Link>
+            </li>
+            <li>
+              <Link to="/login">Login</Link>
+            </li>
+          </>
         )}
         {isAuthenticated && (
           <>
@@ -21,6 +33,9 @@ const Navbar = ({ isAuthenticated }) => {
             </li>
             <li>
               <Link to="/groups">Groups</Link>
+            </li>
+            <li>
+              <button onClick={handleLogoutClick}>Logout</button>
             </li>
           </>
         )}

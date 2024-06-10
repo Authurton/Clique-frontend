@@ -1,8 +1,27 @@
 /* AdminDashboard.css */
-h1, h2, h3 {
+h1, h2, h3, p {
     color: #333;
     text-align: center;
   }
+
+  ul.no-bullets {
+    list-style-type: none; /* Removes bullet points */
+    padding: 0; /* Removes padding */
+}
+
+ul.no-bullets li {
+    text-align: center;
+    text-decoration: none;
+}
+
+ul.no-bullets li strong {
+    cursor: pointer; /* Indicates the item is clickable */
+    color: blue; /* Optional: Style the clickable text */
+}
+
+ul.no-bullets li strong:hover {
+    text-decoration: underline; /* Optional: Underline text on hover */
+}
   
   table {
     width: 80%;

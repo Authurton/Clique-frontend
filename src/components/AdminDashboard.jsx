@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../css/AdminDashboard.css';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({currentUser}) => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,7 +18,6 @@ const AdminDashboard = () => {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(`${baseURL}/api/users/`);
-        console.log(response.data)
         setUsers(response.data);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -26,7 +27,6 @@ const AdminDashboard = () => {
     const fetchGroups = async () => {
       try {
         const response = await axios.get(`${baseURL}/api/groups/`);
-        console.log(response.data, 'group data')
         setGroups(response.data);
       } catch (error) {
         console.error('Error fetching groups:', error);
@@ -45,8 +45,9 @@ const AdminDashboard = () => {
   }, [searchQuery, groups]);
 
   const handleGroupClick = (groupId) => {
-    // Navigate to the chat section for the clicked group
-    console.log(`Navigating to chat for group with ID: ${groupId}`);
+    navigate(`/group-chat/${groupId}`);
+    localStorage.setItem('groupId', JSON.stringify(groupId));
+
   };
 
   const handleSearch = (e) => {
@@ -88,7 +89,23 @@ const handleJoinGroup = async (groupId) => {
 
   return (
     <div>
-    <h1>Admin Dashboard</h1>
+      <div>
+        {currentUser ? (
+          <>
+            <h2>Welcome, {currentUser.name}!</h2>
+            <h3>Your Groups</h3>
+            <ul className="no-bullets">
+              {currentUser.groups.map((group) => (
+                <li key={group.id}>
+                  <strong onClick={() => handleGroupClick(group.id)}>{group.group_name}</strong>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
     <h2>Users</h2>
     <table>
       <thead>
