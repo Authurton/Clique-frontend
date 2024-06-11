@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../axiosInstance';
+import { getCsrfToken } from '../csrf';
 import '../css/UserReg.css';
 
 const UserRegistration = ({onRegister}) => {
@@ -8,10 +9,11 @@ const UserRegistration = ({onRegister}) => {
   const [password, setPassword] = useState('');
   const [interests, setInterests] = useState('');
   const navigate = useNavigate();
-  const baseURL = 'http://localhost:8000';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const csrfToken = await getCsrfToken();
+
     const interestsArray = interests.split(',').map(interest => interest.trim());
     const userData = {
       name,
@@ -20,10 +22,39 @@ const UserRegistration = ({onRegister}) => {
     };
 
     try {
-      await axios.post(`${baseURL}/api/users/`, userData);
-      alert('User registered successfully!');
-      onRegister();
-      navigate('/dashboard'); 
+      const registrationResponse = await axiosInstance.post('/api/users/', userData, {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        }
+      });
+
+      if (registrationResponse.status === 201) {
+        const loginResponse = await axiosInstance.post('/api/users/login/', {
+          username: userData.name, 
+          password: userData.password,
+        }, {
+          headers: {
+            'X-CSRFToken': csrfToken,
+          }
+        });
+
+        if (loginResponse.data.id) {
+          const registeredUser = {
+            id: loginResponse.data.id,
+            name: loginResponse.data.name,
+          };
+
+          localStorage.setItem('userData', JSON.stringify(registeredUser));
+          onRegister();
+          navigate('/dashboard', { state: { user: registeredUser } });
+        } else {
+          console.error(loginResponse.data.error);
+          alert('Failed to log in after registration.');
+        }
+      } else {
+        console.error('Registration failed:', registrationResponse.data);
+        alert('Failed to register user.');
+      }
     } catch (error) {
       console.error('Error registering user:', error.response.data);
       alert('Failed to register user.');

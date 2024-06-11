@@ -75,3 +75,11 @@ ul.no-bullets li strong:hover {
   .filtered-groups li {
     margin-bottom: 0.5rem;
   }
+
+  .button-joined {
+    background-color: #e0e0e0; /* Pale color */
+    color: #757575; /* Text color */
+    cursor: not-allowed; /* Show not-allowed cursor */
+    border: 1px solid #bdbdbd; /* Optional: border for better visibility */
+  }
+  

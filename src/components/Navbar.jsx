@@ -5,8 +5,8 @@ import '../css/Navbar.css';
 const Navbar = ({ isAuthenticated, onLogout }) => {
   const navigate = useNavigate();
   const handleLogoutClick = () => {
-    onLogout(); // Call the onLogout function passed from App
-    navigate('/'); // Navigate to the home page
+    onLogout(); 
+    navigate('/');
   };
 
   

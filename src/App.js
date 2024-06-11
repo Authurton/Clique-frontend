@@ -71,12 +71,14 @@ const App = () => {
         <Route exact path="/" element={<Home />} />
         <Route path="/register" element={<UserRegister onRegister={handleLogin} />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        {isAuthenticated && (
+        {isAuthenticated ? ( 
           <>
             <Route path="/dashboard" element={<AdminDashboard currentUser={currentUser} />} />
             <Route path="/groups" element={<GroupChat />} />
             <Route path="/group-chat/:groupId" element={<GroupChat />} />
           </>
+        ) : (
+          <Route path="*" element={<Home />} /> 
         )}
       </Routes>
     </Router>

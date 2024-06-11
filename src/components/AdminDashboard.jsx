@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import '../css/AdminDashboard.css';
 
 const AdminDashboard = ({currentUser}) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,7 +13,8 @@ const AdminDashboard = ({currentUser}) => {
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [currentGroupName, setCurrentGroupName] = useState('');
-
+  
+  const user = location.state?.user || currentUser || { id: null, name: '', groups: [] };
   const baseURL = 'http://localhost:8000';
 
   useEffect(() => {
@@ -64,12 +66,12 @@ const AdminDashboard = ({currentUser}) => {
     try {
       const response = await axios.post(`${baseURL}/api/groups/`, {
         group_name: newGroupName,
-        users: selectedUsers, // Include the selected user IDs
+        users: selectedUsers, 
       });
-      console.log('New group created:', response.data);
+      
       setGroups([...groups, response.data]);
       setNewGroupName('');
-      setSelectedUsers([]); // Reset the selected users after group creation
+      setSelectedUsers([]); 
     } catch (error) {
       console.error('Error creating group:', error);
     }
@@ -86,6 +88,8 @@ const handleJoinGroup = async (groupId) => {
       );
       setGroups(updatedGroups);
       setCurrentGroupName(response.data.group_name);
+      
+      
       navigate(`/group-chat/${groupId}`, { state: { group: response.data } });
     } else {
       console.error('Error joining group: Response data is empty');
@@ -98,16 +102,19 @@ const handleJoinGroup = async (groupId) => {
   return (
     <div>
       <div>
-        {currentUser ? (
+      {user ? (
           <>
-            <h2>Welcome, {currentUser.name}!</h2>
+            <h2>Welcome, {user.name}!</h2>
             <h3>Your Groups</h3>
             <ul className="no-bullets">
-              {currentUser.groups.map((group) => (
-                <li key={group.id}>
-                  <strong onClick={() => handleGroupClick(group.id)}>{group.group_name}</strong>
-                </li>
-              ))}
+              {user.groups && user.groups.length > 0 && (
+                user.groups.map((group) => (
+                  <li key={group.id}>
+                    <strong onClick={() => handleGroupClick(group.id)}>{group.group_name}</strong>
+                  </li>
+                ))
+              )}
+              {user.groups && user.groups.length === 0 && <li>You are not currently in any groups.</li>}
             </ul>
           </>
         ) : (
@@ -186,14 +193,18 @@ const handleJoinGroup = async (groupId) => {
               </td>
               <td>
                 <ul>
-                  {group.users.map((userId) => {
-                    const user = users.find((user) => user.id === userId);
-                    return <li key={user.id}>{user.name}</li>;
-                  })}
+                {group.users?.map((userId) => ( 
+                  <li key={userId}>{users.find((user) => user.id === userId)?.name}</li>
+                ))}
+                {!group.users?.length && <li>No users in this group.</li>}
                 </ul>
               </td>
               <td>
+              {group.users.includes(currentUser.id) ? (
+                <button className="button-joined" disabled>Joined</button>
+              ) : (
                 <button onClick={() => handleJoinGroup(group.id)}>Join Group</button>
+              )}
               </td>
             </tr>
           ))}
