@@ -11,6 +11,7 @@ const AdminDashboard = ({currentUser}) => {
   const [filteredGroups, setFilteredGroups] = useState([]);
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [currentGroupName, setCurrentGroupName] = useState('');
 
   const baseURL = 'http://localhost:8000';
 
@@ -45,8 +46,11 @@ const AdminDashboard = ({currentUser}) => {
   }, [searchQuery, groups]);
 
   const handleGroupClick = (groupId) => {
-    navigate(`/group-chat/${groupId}`);
+    const group = groups.find(g => g.id === groupId);
     localStorage.setItem('groupId', JSON.stringify(groupId));
+    if (group) {
+      navigate(`/group-chat/${groupId}`, { state: { group } });
+    }
 
   };
 
@@ -74,14 +78,18 @@ const AdminDashboard = ({currentUser}) => {
 const handleJoinGroup = async (groupId) => {
   try {
     const response = await axios.post(`${baseURL}/api/groups/${groupId}/join/`, {
-      userId: 1
+      userId: currentUser.id
     });
-    console.log('Joined group:', response.data);
-    // Update the groups state with the updated group data
-    const updatedGroups = groups.map((group) =>
-      group.id === groupId ? response.data : group
-    );
-    setGroups(updatedGroups);
+    if (response.data) { 
+      const updatedGroups = groups.map((group) =>
+        group.id === groupId ? response.data : group
+      );
+      setGroups(updatedGroups);
+      setCurrentGroupName(response.data.group_name);
+      navigate(`/group-chat/${groupId}`, { state: { group: response.data } });
+    } else {
+      console.error('Error joining group: Response data is empty');
+    }
   } catch (error) {
     console.error('Error joining group:', error);
   }
@@ -169,7 +177,7 @@ const handleJoinGroup = async (groupId) => {
           </tr>
         </thead>
         <tbody>
-          {groups.map((group) => (
+          {groups && groups.map((group) => (
             <tr key={group.id}>
               <td>
                 <strong onClick={() => handleGroupClick(group.id)}>

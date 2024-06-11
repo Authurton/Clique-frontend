@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { useLocation } from 'react-router-dom';
+import { collection, addDoc, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-
 import '../css/GroupChat.css';
 
 const GroupChat = ({ groupId }) => {
+    const location = useLocation();
+    const { group } = location.state || {};
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [groupMembers, setGroupMembers] = useState([]);
     const newId = localStorage.getItem('groupId');
+
     const baseURL = 'http://localhost:8000/';
 
-    console.log(newId, "ddd")
+
     useEffect(() => {
-        // Check if groupId is provided and not undefined
         if (newId) {
             const unsubscribe = onSnapshot(
                 collection(db, 'groups', newId, 'messages'),
@@ -31,7 +33,6 @@ const GroupChat = ({ groupId }) => {
         const fetchGroupMembers = async () => {
             try {
                 const response = await axios.get(`${baseURL}/api/groups/${newId}/users/`);
-                console.log(response, 'group dataaa')
                 setGroupMembers(response.data);
             } catch (error) {
                 console.error('Error fetching group members:', error);
@@ -46,16 +47,31 @@ const GroupChat = ({ groupId }) => {
     const handleSendMessage = async (event) => {
         event.preventDefault();
         if (newMessage.trim()) {
-            // Check if groupId is provided and not undefined
             if (newId) {
-                await addDoc(collection(db, 'groups', newId, 'messages'), { text: newMessage, timestamp: new Date() });
-                setNewMessage('');
+                try {
+                    const groupRef = doc(db, 'groups', newId);
+                    const messagesRef = collection(groupRef, 'messages');
+                    await addDoc(messagesRef, { text: newMessage, timestamp: new Date() });
+                    setNewMessage('');
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
             }
         }
     };
 
     return (
         <div className="group-chat-container">
+            <div>
+                {group? (
+                    <>
+                    <h1>{group.group_name} Group!!!</h1>
+                    <p>Welcome to the chat for {group.group_name}!</p>
+                    </>
+                ): (
+                    <p>No group yet</p>
+                )}
+            </div>
             <h2 className="group-heading">Group Members</h2>
             <ul className="group-members-list">
                 {groupMembers.map(member => (

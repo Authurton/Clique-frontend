@@ -8,8 +8,6 @@ const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const baseURL = 'http://localhost:8000';
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,7 +15,7 @@ const Login = ({ onLogin }) => {
   
     try {
     
-    const response = await axiosInstance.post('/api/users/login/', {
+      const response = await axiosInstance.post('/api/users/login/', {
         username,
         password,
     }, {
@@ -27,15 +25,15 @@ const Login = ({ onLogin }) => {
     });
   
     if (response.data.id) {
-    const sessionCookie = response.headers['set-cookie'];
-    if (sessionCookie) {
-        localStorage.setItem('sessionCookie', sessionCookie);
-    }
-
-    const currentUser = response.data.name;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    onLogin();
-    navigate('/');
+      const userData = {
+        id: response.data.id,
+        name: response.data.name,
+      };
+      const currentUser = response.data.name;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      onLogin();
+      navigate('/');
     } else {
     console.error(response.data.error);
     }

@@ -15,39 +15,51 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const csrfToken =  getCsrfToken();
-  const baseURL = 'http://localhost:8000';
 
-  const handleLogin = () => {
+  useEffect(() => {
+    const storedUserData = localStorage.getItem('userData');
+    if (storedUserData) {
+      const userData = JSON.parse(storedUserData);
+      setIsAuthenticated(true);
+      setCurrentUser(userData);
+    }
+  }, []);
+
+  const handleLogin = async () => {
     setIsAuthenticated(true);
+  
+    try {
+      const response = await axiosInstance.get('/api/users/current_user/', {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      });
+      if (response.data.id) {
+        setCurrentUser(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+    }
   };
 
   const handleLogout = async () => {
     try {
-        await axios.post(`${baseURL}/api/users/logout/`);
-        setIsAuthenticated(false);
-    } catch (error) {
-        console.error('Error logging out:', error);
-    }
-};
-
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await axiosInstance.get('/api/users/current_user/', {
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
-        });
-        if (response.data.id) {
-          setCurrentUser(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-      }
-    };
+      const csrfToken = await getCsrfToken();
   
-    fetchCurrentUser();
-  }, []);
+      const response = await axiosInstance.post('/api/users/logout/', null, {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      });
+  
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      localStorage.removeItem('userData');
+      localStorage.removeItem('currentUser');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   return (
     <Router>

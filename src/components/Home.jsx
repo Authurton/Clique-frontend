@@ -5,7 +5,7 @@ const Home = () => {
   return (
     <div className="home-container">
       <div className="card">
-        <h1>Welcome to My App</h1>
+        <h1>Welcome to Clique of 10</h1>
         <p>
           This is the homepage of our application. Here, you can find information
           about our services and what we offer.
@@ -21,11 +21,6 @@ const Home = () => {
       </div>
       <div className="card">
         <h2>Our Services</h2>
-        <ul>
-          <li>Service 1</li>
-          <li>Service 2</li>
-          <li>Service 3</li>
-        </ul>
         <p>
           To learn more about our services or to get started, please visit the
           corresponding pages in the navigation menu.
