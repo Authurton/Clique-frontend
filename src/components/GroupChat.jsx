@@ -62,6 +62,9 @@ const GroupChat = ({ groupId }) => {
 
     return (
         <div className="group-chat-container">
+            <button onClick={() => window.history.back()} className="back-button">
+                Back
+            </button> 
             <div>
                 {group? (
                     <>

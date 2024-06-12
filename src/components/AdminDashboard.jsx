@@ -21,7 +21,8 @@ const AdminDashboard = ({currentUser}) => {
   const [editInterests, setEditInterests] = useState('');
   const [editPassword, setEditPassword] = useState('');
   
-  const user = location.state?.user || currentUser || { id: null, name: '', groups: [] };
+  // const user = location.state?.user || currentUser || { id: null, name: '', groups: [] };
+  const [user, setUser] = useState(location.state?.user || currentUser || { id: null, name: '', groups: [] });
   const baseURL = 'http://localhost:8000';
 
   useEffect(() => {
@@ -84,27 +85,57 @@ const AdminDashboard = ({currentUser}) => {
     }
   };
 
-const handleJoinGroup = async (groupId) => {
-  try {
-    const response = await axios.post(`${baseURL}/api/groups/${groupId}/join/`, {
-      userId: currentUser.id
-    });
-    if (response.data) { 
-      const updatedGroups = groups.map((group) =>
-        group.id === groupId ? response.data : group
-      );
-      setGroups(updatedGroups);
-      setCurrentGroupName(response.data.group_name);
-      
-      
-      navigate(`/group-chat/${groupId}`, { state: { group: response.data } });
-    } else {
-      console.error('Error joining group: Response data is empty');
+  //Joining a group
+  const handleJoinGroup = async (groupId) => {
+    try {
+      const response = await axios.post(`${baseURL}/api/groups/${groupId}/join/`, {
+        userId: currentUser.id
+      });
+      if (response.data) {
+        const updatedGroups = groups.map(group =>
+          group.id === groupId ? response.data : group
+        );
+        setGroups([...groups, updatedGroups]);
+  
+        const updatedUserGroups = [...user.groups, response.data];
+        setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
+  
+        navigate(`/group-chat/${groupId}`, { state: { group: response.data } });
+      } else {
+        console.error('Error joining group: Response data is empty');
+      }
+    } catch (error) {
+      console.error('Error joining group:', error);
     }
+  };
+
+//Leaving a group
+const handleLeaveGroup = async (groupId) => {
+  const csrfToken = await getCsrfToken();
+  try {
+    await axios.post(
+      `${baseURL}/api/users/${user.id}/leave_group/`,
+      { group_id: groupId },
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      }
+    );
+    const updatedGroups = groups.filter(group => group.id !== groupId);
+    setGroups(updatedGroups);
+
+    const updatedUserGroups = user.groups.filter(group => group.id !== groupId);
+    setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
   } catch (error) {
-    console.error('Error joining group:', error);
+    console.error('Error leaving group:', error);
   }
 };
+
+
+if (!user) {
+  return <p>Loading...</p>;
+}
 
 // CRUD FOR THE USERS
 const handleDeleteUser = async (userId) => {
@@ -163,21 +194,47 @@ return (
           <>
             <h2>Welcome, {user.name}!</h2>
             <h3>Your Groups</h3>
-            <ul className="no-bullets">
-              {user.groups && user.groups.length > 0 && (
-                user.groups.map((group) => (
-                  <li key={group.id}>
-                    <strong onClick={() => handleGroupClick(group.id)}>{group.group_name}</strong>
-                  </li>
-                ))
-              )}
-              {user.groups && user.groups.length === 0 && <li>You are not currently in any groups.</li>}
-            </ul>
+            {user.groups && user.groups.length > 0 ? (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Group Name</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {user.groups.map(group => (
+                    <tr key={group.id}>
+                      <td>
+                        <strong
+                          onClick={() => handleGroupClick(group.id)}
+                          style={{
+                            cursor: 'pointer',
+                            color: 'blue',
+                            textDecoration: 'underline'
+                          }}
+                          onMouseEnter={(e) => e.target.style.color = 'navy'}
+                          onMouseLeave={(e) => e.target.style.color = 'blue'}
+                        >
+                          {group.group_name}
+                        </strong>
+                      </td>
+                      <td>
+                        <button onClick={() => handleLeaveGroup(group.id)}>Leave Group</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>You are not currently in any groups.</p>
+            )}
           </>
         ) : (
           <p>Loading...</p>
         )}
       </div>
+      <hr />
     <h2>Users</h2>
     <table>
         <thead>
@@ -297,7 +354,7 @@ return (
                 </ul>
               </td>
               <td>
-              {group.users.includes(currentUser.id) ? (
+              {group.users?.includes(currentUser.id) ? (
                 <button className="button-joined" disabled>Joined</button>
               ) : (
                 <button onClick={() => handleJoinGroup(group.id)}>Join Group</button>
