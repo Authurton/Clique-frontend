@@ -24,7 +24,7 @@ const GroupChat = ({ groupId, userId, userName  }) => {
                 collection(db, 'groups', newId, 'messages'),
                 (snapshot) => {
                     const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setMessages(messagesData);
+                    setMessages(prevMessages => [...prevMessages, ...messagesData]);
                 }
             );
             return unsubscribe;
@@ -89,15 +89,20 @@ const GroupChat = ({ groupId, userId, userName  }) => {
             <h2 className="group-heading">Chat</h2>
             <div className="chat-messages">
                 {messages.map(message => (
-                    <div key={message.id} className="message">
+                    <div
+                    key={message.id}
+                    className={`message ${message.user === userName ? 'sent' : 'received'}`}
+                    >
                     <div className="message-header">
                         <span className="message-user">{message.user}</span>
-                        <span className="message-timestamp">{new Date(message.timestamp.seconds * 1000).toLocaleString()}</span>
+                        <span className="message-timestamp">
+                        {new Date(message.timestamp.seconds * 1000).toLocaleString()}
+                        </span>
                     </div>
                     <span className="message-text">{message.text}</span>
                     </div>
                 ))}
-            </div>
+                </div>
             <form onSubmit={handleSendMessage} className="chat-form">
                 <input
                     type="text"
