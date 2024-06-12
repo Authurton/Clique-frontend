@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+
+import { getCsrfToken } from '../csrf';
 import '../css/AdminDashboard.css';
+import axiosInstance from '../axiosInstance';
 
 const AdminDashboard = ({currentUser}) => {
   const navigate = useNavigate();
@@ -13,6 +16,10 @@ const AdminDashboard = ({currentUser}) => {
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [currentGroupName, setCurrentGroupName] = useState('');
+  const [editingUser, setEditingUser] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editInterests, setEditInterests] = useState('');
+  const [editPassword, setEditPassword] = useState('');
   
   const user = location.state?.user || currentUser || { id: null, name: '', groups: [] };
   const baseURL = 'http://localhost:8000';
@@ -99,7 +106,57 @@ const handleJoinGroup = async (groupId) => {
   }
 };
 
-  return (
+// CRUD FOR THE USERS
+const handleDeleteUser = async (userId) => {
+  const csrfToken = await getCsrfToken();
+  try {
+    await axiosInstance.delete(`/api/users/${userId}/`,{
+      headers: {
+        'X-CSRFToken': csrfToken,
+      }
+    });
+    setUsers(users.filter(user => user.id !== userId));
+  } catch (error) {
+    console.error('Error deleting user:', error);
+  }
+};
+
+const handleEditUser = (user) => {
+  setEditingUser(user.id);
+  setEditName(user.name || '');
+  setEditInterests(user.interests ? user.interests.join(', ') : '');
+  setEditPassword('');
+};
+
+const handleSaveEdit = async () => {
+  const csrfToken = await getCsrfToken();
+  try {
+    const updateData = {};
+    if (editName !== '') {
+      updateData.username = editName;
+    }
+    if (editInterests !== '') {
+      updateData.interests = editInterests.split(',').map(interest => interest.trim());
+    }
+    if (editPassword !== '') {
+      updateData.password = editPassword;
+    }
+    const response = await axiosInstance.patch(`${baseURL}/api/users/${editingUser}/`, updateData, {
+      headers: {
+        'X-CSRFToken': csrfToken,
+      }
+    });
+    setUsers(users.map(user => user.id === editingUser ? response.data : user));
+    setEditingUser(null);
+    setEditName('');
+    setEditInterests('');
+    setEditPassword('');
+  } catch (error) {
+    console.error('Error updating user:', error);
+  }
+};
+
+return (
     <div>
       <div>
       {user ? (
@@ -123,21 +180,61 @@ const handleJoinGroup = async (groupId) => {
       </div>
     <h2>Users</h2>
     <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Interests</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users.map(user => (
-          <tr key={user.id}>
-            <td>{user.name}</td>
-            <td>{user.interests ? user.interests.join(', ') : 'No interests provided'}</td>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Interests</th>
+            <th>Actions</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {users.map(user => (
+            <tr key={user.id}>
+              <td>
+                {editingUser === user.id ? (
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                ) : (
+                  user.name
+                )}
+              </td>
+              <td>
+                {editingUser === user.id ? (
+                  <input
+                    type="text"
+                    value={editInterests}
+                    onChange={(e) => setEditInterests(e.target.value)}
+                  />
+                ) : (
+                  user.interests ? user.interests.join(', ') : 'No interests provided'
+                )}
+              </td>
+              <td>
+                {editingUser === user.id ? (
+                  <>
+                    <input
+                      type="password"
+                      placeholder="Enter new password (optional)"
+                      value={editPassword}
+                      onChange={(e) => setEditPassword(e.target.value)}
+                    />
+                    <button onClick={handleSaveEdit}>Save</button>
+                    <button onClick={() => setEditingUser(null)}>Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => handleEditUser(user)}>Edit</button>
+                    <button onClick={() => handleDeleteUser(user.id)}>Delete</button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
     <h2>Groups</h2>
       <div>
