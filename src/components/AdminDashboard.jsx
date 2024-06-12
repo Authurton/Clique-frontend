@@ -49,14 +49,14 @@ const AdminDashboard = ({currentUser}) => {
   }, []);
 
   useEffect(() => {
-    const filtered = groups.filter(group =>
-      group.group_name.toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = groups?.filter(group =>
+      group.group_name?.toLowerCase().includes(searchQuery?.toLowerCase())
     );
     setFilteredGroups(filtered);
   }, [searchQuery, groups]);
 
   const handleGroupClick = (groupId) => {
-    const group = groups.find(g => g.id === groupId);
+    const group = groups?.find(g => g.id === groupId);
     localStorage.setItem('groupId', JSON.stringify(groupId));
     if (group) {
       navigate(`/group-chat/${groupId}`, { state: { group } });
@@ -132,10 +132,6 @@ const handleLeaveGroup = async (groupId) => {
   }
 };
 
-
-if (!user) {
-  return <p>Loading...</p>;
-}
 
 // CRUD FOR THE USERS
 const handleDeleteUser = async (userId) => {

@@ -31,9 +31,9 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
             <li>
               <Link to="/dashboard">Dashboard</Link>
             </li>
-            <li>
+            {/* <li>
               <Link to="/groups">Groups</Link>
-            </li>
+            </li> */}
             <li>
               <button onClick={handleLogoutClick}>Logout</button>
             </li>
