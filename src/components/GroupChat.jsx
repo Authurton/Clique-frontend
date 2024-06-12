@@ -5,13 +5,15 @@ import { collection, addDoc, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import '../css/GroupChat.css';
 
-const GroupChat = ({ groupId }) => {
+const GroupChat = ({ groupId, userId, userName  }) => {
     const location = useLocation();
     const { group } = location.state || {};
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [groupMembers, setGroupMembers] = useState([]);
     const newId = localStorage.getItem('groupId');
+
+    console.log(messages)
 
     const baseURL = 'http://localhost:8000/';
 
@@ -47,18 +49,19 @@ const GroupChat = ({ groupId }) => {
     const handleSendMessage = async (event) => {
         event.preventDefault();
         if (newMessage.trim()) {
-            if (newId) {
-                try {
-                    const groupRef = doc(db, 'groups', newId);
-                    const messagesRef = collection(groupRef, 'messages');
-                    await addDoc(messagesRef, { text: newMessage, timestamp: new Date() });
-                    setNewMessage('');
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                }
+          if (newId) {
+            try {
+              const groupRef = doc(db, 'groups', newId);
+              const messagesRef = collection(groupRef, 'messages');
+              const currentUser = userName || 'Anonymous'; 
+              await addDoc(messagesRef, { text: newMessage, timestamp: new Date(), user: currentUser });
+              setNewMessage('');
+            } catch (error) {
+              console.error('Error sending message:', error);
             }
+          }
         }
-    };
+      };
 
     return (
         <div className="group-chat-container">
@@ -87,7 +90,11 @@ const GroupChat = ({ groupId }) => {
             <div className="chat-messages">
                 {messages.map(message => (
                     <div key={message.id} className="message">
-                        <span className="message-text">{message.text}</span>
+                    <div className="message-header">
+                        <span className="message-user">{message.user}</span>
+                        <span className="message-timestamp">{new Date(message.timestamp.seconds * 1000).toLocaleString()}</span>
+                    </div>
+                    <span className="message-text">{message.text}</span>
                     </div>
                 ))}
             </div>

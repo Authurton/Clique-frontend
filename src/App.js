@@ -75,7 +75,7 @@ const App = () => {
           <>
             <Route path="/dashboard" element={<AdminDashboard currentUser={currentUser} />} />
             <Route path="/groups" element={<GroupChat />} />
-            <Route path="/group-chat/:groupId" element={<GroupChat />} />
+            <Route path="/group-chat/:groupId" element={<GroupChat userId={currentUser?.id} userName={currentUser?.name}  />} />
           </>
         ) : (
           <Route path="*" element={<Home />} /> 
