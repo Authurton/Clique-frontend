@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import { getCsrfToken } from '../csrf';
 import '../css/AdminDashboard.css';
+import InterestGrouping from './InterestGrouping';
 import axiosInstance from '../axiosInstance';
 
 const AdminDashboard = ({currentUser}) => {
@@ -360,6 +361,10 @@ return (
           ))}
         </tbody>
       </table>
+      <div>
+        <h2>Group By Interests</h2>
+        <InterestGrouping users={users}/>
+      </div>
 
     <div className="search-container">
       <h2>Search for Other Groups</h2>
