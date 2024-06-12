@@ -221,12 +221,12 @@ return (
                       value={editPassword}
                       onChange={(e) => setEditPassword(e.target.value)}
                     />
-                    <button onClick={handleSaveEdit}>Save</button>
+                    <button onClick={handleSaveEdit} style={{ marginRight: '10px' }}>Save</button>
                     <button onClick={() => setEditingUser(null)}>Cancel</button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => handleEditUser(user)}>Edit</button>
+                    <button onClick={() => handleEditUser(user)} style={{ marginRight: '10px' }}>Edit</button>
                     <button onClick={() => handleDeleteUser(user.id)}>Delete</button>
                   </>
                 )}
