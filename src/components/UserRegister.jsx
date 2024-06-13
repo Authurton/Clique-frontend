@@ -3,15 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosInstance';
 import { getCsrfToken } from '../csrf';
 import '../css/UserReg.css';
+import { TailSpin } from 'react-loader-spinner';
 
-const UserRegistration = ({onRegister}) => {
+const UserRegistration = ({ onRegister }) => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [interests, setInterests] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true); // Set loading to true at the start of the request
     const csrfToken = await getCsrfToken();
 
     const interestsArray = interests.split(',').map(interest => interest.trim());
@@ -30,7 +33,7 @@ const UserRegistration = ({onRegister}) => {
 
       if (registrationResponse.status === 201) {
         const loginResponse = await axiosInstance.post('/api/users/login/', {
-          username: userData.name, 
+          username: userData.name,
           password: userData.password,
         }, {
           headers: {
@@ -58,41 +61,57 @@ const UserRegistration = ({onRegister}) => {
     } catch (error) {
       console.error('Error registering user:', error.response.data);
       alert('Failed to register user.');
+    } finally {
+      setLoading(false); // Set loading to false once the request is complete
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>Name:</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label>Password:</label>
-        <input
-          type="text"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label>Interests:</label>
-        <input
-          type="text"
-          value={interests}
-          onChange={(e) => setInterests(e.target.value)}
-          required
-        />
-        <small>Comma separated values</small>
-      </div>
-      <button type="submit">Register</button>
-    </form>
+    <div className="registration-form-container">
+      {loading && (
+        <div className="spinner-overlay">
+          <TailSpin
+            height="50"
+            width="50"
+            color="#00BFFF"
+            ariaLabel="loading"
+          />
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className={loading ? 'loading' : ''}>
+        <div>
+          <label>Name:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Password:</label>
+          <input
+            type="text"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Interests:</label>
+          <input
+            type="text"
+            value={interests}
+            onChange={(e) => setInterests(e.target.value)}
+            required
+          />
+          <small>Comma separated values</small>
+        </div>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
+        </button>
+      </form>
+    </div>
   );
 };
 
