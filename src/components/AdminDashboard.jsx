@@ -7,7 +7,7 @@ import '../css/AdminDashboard.css';
 import InterestGrouping from './InterestGrouping';
 import axiosInstance from '../axiosInstance';
 
-const AdminDashboard = ({currentUser}) => {
+const AdminDashboard = ({ currentUser, updateUserGroups }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [users, setUsers] = useState([]);
@@ -22,7 +22,6 @@ const AdminDashboard = ({currentUser}) => {
   const [editInterests, setEditInterests] = useState('');
   const [editPassword, setEditPassword] = useState('');
   
-  // const user = location.state?.user || currentUser || { id: null, name: '', groups: [] };
   const [user, setUser] = useState(location.state?.user || currentUser || { id: null, name: '', groups: [] });
   const baseURL = 'http://localhost:8000';
 
@@ -62,13 +61,11 @@ const AdminDashboard = ({currentUser}) => {
     if (group) {
       navigate(`/group-chat/${groupId}`, { state: { group } });
     }
-
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
-
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -86,8 +83,38 @@ const AdminDashboard = ({currentUser}) => {
     }
   };
 
-  //Joining a group
+  // const handleJoinGroup = async (groupId) => {
+  //   if (!currentUser || !currentUser.id) {
+  //     console.error('User is not logged in.');
+  //     return;
+  //   }
+  //   try {
+  //     const response = await axios.post(`${baseURL}/api/groups/${groupId}/join/`, {
+  //       userId: currentUser.id
+  //     });
+  //     if (response.data) {
+  //       const updatedGroups = groups.map(group =>
+  //         group.id === groupId ? response.data : group
+  //       );
+  //       setGroups(updatedGroups);
+  
+  //       const updatedUserGroups = [...user.groups, response.data];
+  //       setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
+  
+  //       navigate(`/group-chat/${groupId}`, { state: { group: response.data } });
+  //     } else {
+  //       console.error('Error joining group: Response data is empty');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error joining group:', error);
+  //   }
+  // };
+
   const handleJoinGroup = async (groupId) => {
+    if (!currentUser || !currentUser.id) {
+      console.error('User is not logged in.');
+      return;
+    }
     try {
       const response = await axios.post(`${baseURL}/api/groups/${groupId}/join/`, {
         userId: currentUser.id
@@ -96,10 +123,10 @@ const AdminDashboard = ({currentUser}) => {
         const updatedGroups = groups.map(group =>
           group.id === groupId ? response.data : group
         );
-        setGroups([...groups, updatedGroups]);
+        setGroups(updatedGroups);
   
-        const updatedUserGroups = [...user.groups, response.data];
-        setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
+        const updatedUserGroups = [...currentUser.groups, response.data];
+        updateUserGroups(updatedUserGroups);
   
         navigate(`/group-chat/${groupId}`, { state: { group: response.data } });
       } else {
@@ -109,89 +136,110 @@ const AdminDashboard = ({currentUser}) => {
       console.error('Error joining group:', error);
     }
   };
+  
+  const handleLeaveGroup = async (groupId) => {
+    const csrfToken = await getCsrfToken();
+    try {
+      await axios.post(
+        `${baseURL}/api/users/${currentUser.id}/leave_group/`,
+        { group_id: groupId },
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+          },
+        }
+      );
+      const updatedGroups = groups.filter(group => group.id !== groupId);
+      setGroups(updatedGroups);
 
-//Leaving a group
-const handleLeaveGroup = async (groupId) => {
-  const csrfToken = await getCsrfToken();
-  try {
-    await axios.post(
-      `${baseURL}/api/users/${user.id}/leave_group/`,
-      { group_id: groupId },
-      {
+      const updatedUserGroups = currentUser.groups.filter(group => group.id !== groupId);
+      updateUserGroups(updatedUserGroups);
+    } catch (error) {
+      console.error('Error leaving group:', error);
+    }
+  };
+
+  
+
+  // const handleLeaveGroup = async (groupId) => {
+  //   const csrfToken = await getCsrfToken();
+  //   try {
+  //     await axios.post(
+  //       `${baseURL}/api/users/${user.id}/leave_group/`,
+  //       { group_id: groupId },
+  //       {
+  //         headers: {
+  //           'X-CSRFToken': csrfToken,
+  //         },
+  //       }
+  //     );
+  //     const updatedGroups = groups.filter(group => group.id !== groupId);
+  //     setGroups(updatedGroups);
+
+  //     const updatedUserGroups = user.groups.filter(group => group.id !== groupId);
+  //     setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
+  //   } catch (error) {
+  //     console.error('Error leaving group:', error);
+  //   }
+  // };
+
+  const handleDeleteUser = async (userId) => {
+    const csrfToken = await getCsrfToken();
+    try {
+      await axiosInstance.delete(`/api/users/${userId}/`, {
         headers: {
           'X-CSRFToken': csrfToken,
-        },
-      }
-    );
-    const updatedGroups = groups.filter(group => group.id !== groupId);
-    setGroups(updatedGroups);
-
-    const updatedUserGroups = user.groups.filter(group => group.id !== groupId);
-    setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
-  } catch (error) {
-    console.error('Error leaving group:', error);
-  }
-};
-
-
-// CRUD FOR THE USERS
-const handleDeleteUser = async (userId) => {
-  const csrfToken = await getCsrfToken();
-  try {
-    await axiosInstance.delete(`/api/users/${userId}/`,{
-      headers: {
-        'X-CSRFToken': csrfToken,
-      }
-    });
-    setUsers(users.filter(user => user.id !== userId));
-  } catch (error) {
-    console.error('Error deleting user:', error);
-  }
-};
-
-const handleEditUser = (user) => {
-  setEditingUser(user.id);
-  setEditName(user.name || '');
-  setEditInterests(user.interests ? user.interests.join(', ') : '');
-  setEditPassword('');
-};
-
-const handleSaveEdit = async () => {
-  const csrfToken = await getCsrfToken();
-  try {
-    const updateData = {};
-    if (editName !== '') {
-      updateData.username = editName;
+        }
+      });
+      setUsers(users.filter(user => user.id !== userId));
+    } catch (error) {
+      console.error('Error deleting user:', error);
     }
-    if (editInterests !== '') {
-      updateData.interests = editInterests.split(',').map(interest => interest.trim());
-    }
-    if (editPassword !== '') {
-      updateData.password = editPassword;
-    }
-    const response = await axiosInstance.patch(`${baseURL}/api/users/${editingUser}/`, updateData, {
-      headers: {
-        'X-CSRFToken': csrfToken,
-      }
-    });
-    setUsers(users.map(user => user.id === editingUser ? response.data : user));
-    setEditingUser(null);
-    setEditName('');
-    setEditInterests('');
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user.id);
+    setEditName(user.name || '');
+    setEditInterests(user.interests ? user.interests.join(', ') : '');
     setEditPassword('');
-  } catch (error) {
-    console.error('Error updating user:', error);
-  }
-};
+  };
 
-return (
+  const handleSaveEdit = async () => {
+    const csrfToken = await getCsrfToken();
+    try {
+      const updateData = {};
+      if (editName !== '') {
+        updateData.username = editName;
+      }
+      if (editInterests !== '') {
+        updateData.interests = editInterests.split(',').map(interest => interest.trim());
+      }
+      if (editPassword !== '') {
+        updateData.password = editPassword;
+      }
+      const response = await axiosInstance.patch(`${baseURL}/api/users/${editingUser}/`, updateData, {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        }
+      });
+      setUsers(users.map(user => user.id === editingUser ? response.data : user));
+      setEditingUser(null);
+      setEditName('');
+      setEditInterests('');
+      setEditPassword('');
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };
+
+  return (
     <div>
       <div>
-      {user ? (
+        {currentUser && currentUser.id ? (
           <>
-            <h2>Welcome, {user.name}!</h2>
+            <h2>Welcome, {currentUser.name}!</h2>
             <h3>Your Groups</h3>
-            {user.groups && user.groups.length > 0 ? (
+            {currentUser.groups && currentUser.groups.length > 0 ? (
               <table>
                 <thead>
                   <tr>
@@ -200,7 +248,7 @@ return (
                   </tr>
                 </thead>
                 <tbody>
-                  {user.groups.map(group => (
+                  {currentUser.groups.map(group => (
                     <tr key={group.id}>
                       <td>
                         <strong
@@ -232,8 +280,8 @@ return (
         )}
       </div>
       <hr />
-    <h2>Users</h2>
-    <table>
+      <h2>Users</h2>
+      <table>
         <thead>
           <tr>
             <th>Name</th>
@@ -290,7 +338,7 @@ return (
         </tbody>
       </table>
 
-    <h2>Groups</h2>
+      <h2>Groups</h2>
       <div>
         <h3>Create New Group</h3>
         <form onSubmit={handleCreateGroup}>
@@ -344,18 +392,23 @@ return (
               </td>
               <td>
                 <ul>
-                {group.users?.map((userId) => ( 
-                  <li key={userId}>{users.find((user) => user.id === userId)?.name}</li>
-                ))}
-                {!group.users?.length && <li>No users in this group.</li>}
+                  {group.users && group.users.length > 0 ? (
+                    group.users.map((userId) => (
+                      <li key={userId}>
+                        {users.find((user) => user.id === userId)?.name}
+                      </li>
+                    ))
+                  ) : (
+                    <li>No users in this group.</li>
+                  )}
                 </ul>
               </td>
               <td>
-              {group.users?.includes(currentUser.id) ? (
-                <button className="button-joined" disabled>Joined</button>
-              ) : (
-                <button onClick={() => handleJoinGroup(group.id)}>Join Group</button>
-              )}
+                {group.users?.includes(currentUser?.id) ? (
+                  <button className="button-joined" disabled>Joined</button>
+                ) : (
+                  <button onClick={() => handleJoinGroup(group.id)}>Join Group</button>
+                )}
               </td>
             </tr>
           ))}
@@ -363,27 +416,27 @@ return (
       </table>
       <div>
         <h2>Group By Interests</h2>
-        <InterestGrouping users={users}/>
+        <InterestGrouping users={users} />
       </div>
 
-    <div className="search-container">
-      <h2>Search for Other Groups</h2>
-      <input
-        type="text"
-        placeholder="Search groups..."
-        value={searchQuery}
-        onChange={handleSearch}
-        className="search-input"
-      />
-      <ul className="filtered-groups">
-        {filteredGroups.map((group) => (
-          <li key={group.id}>
-            <strong>{group.group_name}</strong>
-          </li>
-        ))}
-      </ul>
+      <div className="search-container">
+        <h2>Search for Other Groups</h2>
+        <input
+          type="text"
+          placeholder="Search groups..."
+          value={searchQuery}
+          onChange={handleSearch}
+          className="search-input"
+        />
+        <ul className="filtered-groups">
+          {filteredGroups.map((group) => (
+            <li key={group.id}>
+              <strong>{group.group_name}</strong>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
-  </div>
   );
 };
 

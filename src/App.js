@@ -61,6 +61,10 @@ const App = () => {
     }
   };
 
+  const updateUserGroups = (newGroups) => {
+    setCurrentUser(prevUser => ({ ...prevUser, groups: newGroups }));
+  };
+
   return (
     <Router>
       <Navbar
@@ -73,7 +77,7 @@ const App = () => {
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         {isAuthenticated ? ( 
           <>
-            <Route path="/dashboard" element={<AdminDashboard currentUser={currentUser} />} />
+            <Route path="/dashboard" element={<AdminDashboard currentUser={currentUser} updateUserGroups={updateUserGroups} />} />
             <Route path="/groups" element={<GroupChat />} />
             <Route path="/group-chat/:groupId" element={<GroupChat userId={currentUser?.id} userName={currentUser?.name}  />} />
           </>
