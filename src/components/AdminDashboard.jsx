@@ -83,33 +83,6 @@ const AdminDashboard = ({ currentUser, updateUserGroups }) => {
     }
   };
 
-  // const handleJoinGroup = async (groupId) => {
-  //   if (!currentUser || !currentUser.id) {
-  //     console.error('User is not logged in.');
-  //     return;
-  //   }
-  //   try {
-  //     const response = await axios.post(`${baseURL}/api/groups/${groupId}/join/`, {
-  //       userId: currentUser.id
-  //     });
-  //     if (response.data) {
-  //       const updatedGroups = groups.map(group =>
-  //         group.id === groupId ? response.data : group
-  //       );
-  //       setGroups(updatedGroups);
-  
-  //       const updatedUserGroups = [...user.groups, response.data];
-  //       setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
-  
-  //       navigate(`/group-chat/${groupId}`, { state: { group: response.data } });
-  //     } else {
-  //       console.error('Error joining group: Response data is empty');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error joining group:', error);
-  //   }
-  // };
-
   const handleJoinGroup = async (groupId) => {
     if (!currentUser || !currentUser.id) {
       console.error('User is not logged in.');
@@ -158,30 +131,6 @@ const AdminDashboard = ({ currentUser, updateUserGroups }) => {
       console.error('Error leaving group:', error);
     }
   };
-
-  
-
-  // const handleLeaveGroup = async (groupId) => {
-  //   const csrfToken = await getCsrfToken();
-  //   try {
-  //     await axios.post(
-  //       `${baseURL}/api/users/${user.id}/leave_group/`,
-  //       { group_id: groupId },
-  //       {
-  //         headers: {
-  //           'X-CSRFToken': csrfToken,
-  //         },
-  //       }
-  //     );
-  //     const updatedGroups = groups.filter(group => group.id !== groupId);
-  //     setGroups(updatedGroups);
-
-  //     const updatedUserGroups = user.groups.filter(group => group.id !== groupId);
-  //     setUser(prevUser => ({ ...prevUser, groups: updatedUserGroups }));
-  //   } catch (error) {
-  //     console.error('Error leaving group:', error);
-  //   }
-  // };
 
   const handleDeleteUser = async (userId) => {
     const csrfToken = await getCsrfToken();
